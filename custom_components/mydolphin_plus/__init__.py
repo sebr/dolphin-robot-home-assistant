@@ -10,7 +10,7 @@ import sys
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_USERNAME, EVENT_HOMEASSISTANT_START
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 
 from .common.consts import (
     DEFAULT_NAME,
