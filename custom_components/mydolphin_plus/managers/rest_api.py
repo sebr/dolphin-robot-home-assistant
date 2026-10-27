@@ -1,15 +1,14 @@
 from __future__ import annotations
 
-from datetime import datetime
 import json
 import logging
 import sys
 import time
+from datetime import datetime
 from typing import Any
 
 from aiohttp import ClientResponseError, ClientSession
 from aiohttp.hdrs import METH_GET, METH_POST
-
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.dispatcher import dispatcher_send
@@ -291,7 +290,7 @@ class RestAPI:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
             message = (
-                f"Failed to initialize session, Error: {str(ex)}, Line: {line_number}"
+                f"Failed to initialize session, Error: {ex!s}, Line: {line_number}"
             )
             self._set_status(ConnectivityStatus.FAILED, message)
 

@@ -5,11 +5,11 @@ from __future__ import annotations
 from types import SimpleNamespace
 
 import pytest
+from homeassistant.components.vacuum import VacuumActivity
 
 from custom_components.mydolphin_plus.managers.coordinator import (
     MyDolphinPlusCoordinator,
 )
-from homeassistant.components.vacuum import VacuumActivity
 
 
 @pytest.mark.asyncio

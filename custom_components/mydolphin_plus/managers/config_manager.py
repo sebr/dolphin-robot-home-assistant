@@ -1,11 +1,10 @@
-from datetime import datetime
 import json
 import logging
 import os
 import sys
+from datetime import datetime
 
 from cryptography.fernet import InvalidToken
-
 from homeassistant.config_entries import STORAGE_VERSION, ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant

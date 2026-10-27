@@ -1,3 +1,6 @@
+from homeassistant.components.vacuum import VacuumActivity
+from homeassistant.const import ATTR_MODE
+
 from custom_components.mydolphin_plus.common.calculated_state import CalculatedState
 from custom_components.mydolphin_plus.common.clean_modes import CleanModes
 from custom_components.mydolphin_plus.common.consts import (
@@ -26,8 +29,6 @@ from custom_components.mydolphin_plus.common.consts import (
 from custom_components.mydolphin_plus.common.joystick_direction import JoystickDirection
 from custom_components.mydolphin_plus.common.power_supply_state import PowerSupplyState
 from custom_components.mydolphin_plus.common.robot_state import RobotState
-from homeassistant.components.vacuum import VacuumActivity
-from homeassistant.const import ATTR_MODE
 
 
 class SystemDetails:
@@ -129,11 +130,10 @@ class SystemDetails:
         calculated_state = CalculatedState.OFF
         vacuum_state = VacuumActivity.DOCKED
 
-        if power_supply_state == PowerSupplyState.ERROR:
-            calculated_state = CalculatedState.ERROR
-            vacuum_state = VacuumActivity.ERROR
-
-        elif robot_state == RobotState.FAULT:
+        if (
+            power_supply_state == PowerSupplyState.ERROR
+            or robot_state == RobotState.FAULT
+        ):
             calculated_state = CalculatedState.ERROR
             vacuum_state = VacuumActivity.ERROR
 

@@ -59,10 +59,12 @@ class IntegrationInfo:
         return self._version
 
     def set_user_agent(self, headers: dict) -> None:
-        """Set User-Agent header if name and version are available.
+        """
+        Set User-Agent header if name and version are available.
 
         Args:
             headers: Headers dict to modify. Will set User-Agent if name/version are valid.
+
         """
         if self._initialized:
             headers["User-Agent"] = self._user_agent

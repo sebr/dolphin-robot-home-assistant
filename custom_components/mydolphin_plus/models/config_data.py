@@ -1,7 +1,6 @@
 import voluptuous as vol
-from voluptuous import Schema
-
 from homeassistant.const import CONF_USERNAME
+from voluptuous import Schema
 
 from ..common.consts import CONF_OTP, CONF_TITLE, DEFAULT_NAME
 

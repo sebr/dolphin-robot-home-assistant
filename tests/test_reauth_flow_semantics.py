@@ -5,7 +5,9 @@ from __future__ import annotations
 from types import SimpleNamespace
 
 import pytest
+from homeassistant.config_entries import SOURCE_REAUTH
 
+import custom_components.mydolphin_plus.managers.flow_manager as flow_manager_module
 from custom_components.mydolphin_plus.common.connectivity_status import (
     ConnectivityStatus,
 )
@@ -18,12 +20,10 @@ from custom_components.mydolphin_plus.common.consts import (
 from custom_components.mydolphin_plus.managers.coordinator import (
     MyDolphinPlusCoordinator,
 )
-import custom_components.mydolphin_plus.managers.flow_manager as flow_manager_module
 from custom_components.mydolphin_plus.managers.flow_manager import (
     _FLOW_STATE_ATTR,
     IntegrationFlowManager,
 )
-from homeassistant.config_entries import SOURCE_REAUTH
 
 
 class DummyFlowHandler:
@@ -60,12 +60,18 @@ async def test_flow_manager_reauth_otp_updates_existing_entry(monkeypatch):
         return None
 
     async def fake_respond_otp(*_args, **_kwargs):
-        return {"IdToken": "id-token", "RefreshToken": "refresh-token", "ExpiresIn": 3600}
+        return {
+            "IdToken": "id-token",
+            "RefreshToken": "refresh-token",
+            "ExpiresIn": 3600,
+        }
 
     async def fake_profile(*_args, **_kwargs):
         return {"Sernum": "serial", "eSERNUM": "motor"}
 
-    monkeypatch.setattr(flow_manager_module, "async_get_clientsession", lambda _hass: object())
+    monkeypatch.setattr(
+        flow_manager_module, "async_get_clientsession", lambda _hass: object()
+    )
     monkeypatch.setattr(
         flow_manager_module.IntegrationInfo,
         "initialize",
@@ -111,8 +117,12 @@ async def test_coordinator_reauth_is_started_once_for_expired_token():
         entry=SimpleNamespace(async_start_reauth=fake_start_reauth),
     )
 
-    await coordinator._on_api_status_changed("entry-id", ConnectivityStatus.EXPIRED_TOKEN)
-    await coordinator._on_api_status_changed("entry-id", ConnectivityStatus.EXPIRED_TOKEN)
+    await coordinator._on_api_status_changed(
+        "entry-id", ConnectivityStatus.EXPIRED_TOKEN
+    )
+    await coordinator._on_api_status_changed(
+        "entry-id", ConnectivityStatus.EXPIRED_TOKEN
+    )
 
     assert calls["reauth"] == 1
     assert calls["failure"] == 2

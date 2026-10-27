@@ -1,8 +1,8 @@
-from asyncio import sleep
-from datetime import datetime, timedelta
 import logging
 import sys
-from typing import Callable
+from asyncio import sleep
+from collections.abc import Callable
+from datetime import datetime, timedelta
 
 from homeassistant.components.number.const import SERVICE_SET_VALUE
 from homeassistant.components.remote import ATTR_ACTIVITY, SERVICE_SEND_COMMAND
@@ -368,7 +368,8 @@ class MyDolphinPlusCoordinator(DataUpdateCoordinator):
         await self._api.initialize()
 
     async def _async_update_data(self):
-        """Fetch parameters from API endpoint.
+        """
+        Fetch parameters from API endpoint.
 
         This is the place to pre-process the parameters to lookup tables
         so entities can quickly look up their parameters.
@@ -447,9 +448,8 @@ class MyDolphinPlusCoordinator(DataUpdateCoordinator):
                     f"Handler was not found for {entity_description.key}, Entity Description: {entity_description}"
                 )
 
-            else:
-                if self._system_details.is_updated:
-                    result = handler(entity_description)
+            elif self._system_details.is_updated:
+                result = handler(entity_description)
 
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
@@ -882,8 +882,7 @@ class MyDolphinPlusCoordinator(DataUpdateCoordinator):
 
         if led_light_state:
             _LOGGER.warning(
-                "Locate will not run as the LED currently on, "
-                "you should see the robot"
+                "Locate will not run as the LED currently on, you should see the robot"
             )
 
         else:

@@ -1,5 +1,5 @@
-from enum import StrEnum
 import logging
+from enum import StrEnum
 
 
 class ConnectivityStatus(StrEnum):
@@ -36,13 +36,12 @@ class ConnectivityStatus(StrEnum):
             ConnectivityStatus.TEMPORARY_CONNECTED,
         ]:
             return logging.INFO
-        elif status in [
+        if status in [
             ConnectivityStatus.NOT_CONNECTED,
             ConnectivityStatus.EXPIRED_TOKEN,
         ]:
             return logging.WARNING
-        else:
-            return logging.ERROR
+        return logging.ERROR
 
     @staticmethod
     def get_ha_error(status: str) -> str | None:

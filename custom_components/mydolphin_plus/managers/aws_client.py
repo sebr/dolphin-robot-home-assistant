@@ -1,18 +1,18 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime
 import json
 import logging
 import os
 import sys
+from collections.abc import Callable
+from datetime import datetime
 from time import sleep
-from typing import Any, Callable
+from typing import Any
 
 import aiofiles
 from awscrt import auth, mqtt
 from awsiot import mqtt_connection_builder
-
 from homeassistant.const import CONF_MODE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import dispatcher_send
@@ -455,7 +455,7 @@ class AWSClient:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
             message_details = f"Topic: {topic}, Data: {payload}"
-            error_details = f"Error: {str(ex)}, Line: {line_number}"
+            error_details = f"Error: {ex!s}, Line: {line_number}"
 
             _LOGGER.error(
                 f"Callback parsing failed, {message_details}, {error_details}"
@@ -520,7 +520,7 @@ class AWSClient:
 
             except Exception as ex:
                 _LOGGER.error(
-                    f"Error while trying to publish message: {data} to {topic}, Error: {str(ex)}"
+                    f"Error while trying to publish message: {data} to {topic}, Error: {ex!s}"
                 )
 
         else:

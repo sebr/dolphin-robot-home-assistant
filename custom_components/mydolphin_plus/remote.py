@@ -1,5 +1,5 @@
-from collections.abc import Iterable
 import logging
+from collections.abc import Iterable
 
 from homeassistant.components.remote import SERVICE_SEND_COMMAND, RemoteEntity
 from homeassistant.config_entries import ConfigEntry
@@ -52,7 +52,6 @@ class MyDolphinPlusRemoteEntity(MyDolphinPlusBaseEntity, RemoteEntity):
 
     async def async_turn_on(self, activity: str = None, **kwargs):
         """Send the power on command."""
-
         if activity is None:
             activity = JoystickDirection.STOP
 

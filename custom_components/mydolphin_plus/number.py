@@ -1,5 +1,5 @@
-from abc import ABC
 import logging
+from abc import ABC
 
 from homeassistant.components.number import NumberEntity
 from homeassistant.components.number.const import SERVICE_SET_VALUE

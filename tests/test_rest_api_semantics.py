@@ -6,6 +6,7 @@ from datetime import datetime
 
 import pytest
 
+import custom_components.mydolphin_plus.managers.rest_api as rest_api_module
 from custom_components.mydolphin_plus.common.connectivity_status import (
     ConnectivityStatus,
 )
@@ -19,7 +20,6 @@ from custom_components.mydolphin_plus.common.consts import (
     STORAGE_DATA_REFRESH_TOKEN,
 )
 from custom_components.mydolphin_plus.managers.config_manager import ConfigManager
-import custom_components.mydolphin_plus.managers.rest_api as rest_api_module
 from custom_components.mydolphin_plus.managers.rest_api import (
     RestAPI,
     cognito_initiate_auth,
@@ -65,7 +65,9 @@ class FakeResponse:
 class FakeSession:
     """Captures request headers for assertions."""
 
-    def __init__(self, post_payload: dict | None = None, get_payload: dict | None = None):
+    def __init__(
+        self, post_payload: dict | None = None, get_payload: dict | None = None
+    ):
         self._post_payload = post_payload or {}
         self._get_payload = get_payload or {}
         self.last_headers: dict | None = None
@@ -124,7 +126,9 @@ class DummyConfigManager:
 @pytest.mark.asyncio
 async def test_cognito_initiate_auth_sets_user_agent():
     """Cognito initiate auth includes User-Agent headers."""
-    session = FakeSession(post_payload={"ChallengeName": "CUSTOM_CHALLENGE", "Session": "x"})
+    session = FakeSession(
+        post_payload={"ChallengeName": "CUSTOM_CHALLENGE", "Session": "x"}
+    )
     info = DummyIntegrationInfo()
 
     await cognito_initiate_auth(session, "user@example.com", integration_info=info)
@@ -146,7 +150,7 @@ async def test_fetch_user_profile_sets_user_agent():
 
 @pytest.mark.asyncio
 async def test_fetch_aws_credentials_sets_user_agent():
-    """getToken request includes User-Agent headers."""
+    """GetToken request includes User-Agent headers."""
     session = FakeSession(get_payload={"Data": {"AccessKeyId": "AKIA"}})
     info = DummyIntegrationInfo()
 
@@ -225,7 +229,9 @@ async def test_refresh_aws_credentials_uses_aws_fetch_timestamp(monkeypatch):
             "SecretAccessKey": "sk",
         }
 
-    monkeypatch.setattr(rest_api_module, "fetch_aws_credentials", fake_fetch_aws_credentials)
+    monkeypatch.setattr(
+        rest_api_module, "fetch_aws_credentials", fake_fetch_aws_credentials
+    )
 
     await api._refresh_aws_credentials()
 
