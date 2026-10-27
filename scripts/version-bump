@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+
+set -e
+
+cd "$(dirname "$0")/.."
+
+MANIFEST="custom_components/mydolphin_plus/manifest.json"
+CURRENT=$(python3 -c "import json; print(json.load(open('$MANIFEST'))['version'])")
+
+# Parse current version (vX.Y.Z or vX.Y.ZbN)
+if [[ "$CURRENT" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)(b([0-9]+))?$ ]]; then
+  MAJOR="${BASH_REMATCH[1]}"
+  MINOR="${BASH_REMATCH[2]}"
+  PATCH="${BASH_REMATCH[3]}"
+  BETA="${BASH_REMATCH[5]}"
+else
+  echo "Error: '$CURRENT' is not a valid version (expected vX.Y.Z or vX.Y.ZbN)."
+  exit 1
+fi
+
+# Compute preview versions
+MAJOR_NEW="v$((MAJOR + 1)).0.0"
+MINOR_NEW="v${MAJOR}.$((MINOR + 1)).0"
+if [ -n "$BETA" ]; then
+  # Patch on a beta promotes it to the stable release of that version
+  PATCH_NEW="v${MAJOR}.${MINOR}.${PATCH}"
+  BETA_NEW="v${MAJOR}.${MINOR}.${PATCH}b$((BETA + 1))"
+else
+  PATCH_NEW="v${MAJOR}.${MINOR}.$((PATCH + 1))"
+  BETA_NEW="v${MAJOR}.${MINOR}.$((PATCH + 1))b1"
+fi
+
+echo "Current version: ${CURRENT}"
+echo ""
+echo "What would you like to bump?"
+echo "  1) major  → ${MAJOR_NEW}"
+echo "  2) minor  → ${MINOR_NEW}"
+echo "  3) patch  → ${PATCH_NEW}"
+echo "  4) beta   → ${BETA_NEW}"
+echo ""
+read -rp "Enter choice [1-4]: " CHOICE
+
+case "$CHOICE" in
+  1) NEW_VERSION="$MAJOR_NEW" ;;
+  2) NEW_VERSION="$MINOR_NEW" ;;
+  3) NEW_VERSION="$PATCH_NEW" ;;
+  4) NEW_VERSION="$BETA_NEW" ;;
+  *)
+    echo "Invalid choice."
+    exit 1
+    ;;
+esac
+
+# Update manifest.json using python for clean JSON writing
+python3 -c "
+import json
+with open('$MANIFEST', 'r') as f:
+    data = json.load(f)
+data['version'] = '$NEW_VERSION'
+with open('$MANIFEST', 'w') as f:
+    json.dump(data, f, indent=2)
+    f.write('\n')
+"
+
+echo ""
+echo "Bumped version: ${CURRENT} → ${NEW_VERSION}"

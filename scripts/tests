@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+set -e
+
+cd "$(dirname "$0")/.."
+
+# Run tests with verbose output and coverage
+uv run pytest tests/ -v --tb=short
+
+# Optional: Run with coverage if pytest-cov is available
+# uv run pytest tests/ -v --cov=custom_components.mydolphin_plus --cov-report=term-missing

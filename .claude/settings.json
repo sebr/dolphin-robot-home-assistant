@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python:*)",
+      "Bash(find:*)",
+      "Bash(git:*)",
+      "Bash(gh:*)",
+      "Read(*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

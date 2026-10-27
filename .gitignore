@@ -60,10 +60,22 @@ docs/_build/
 target/
 
 /.idea
-.vscode/
+.vscode/*
+!.vscode/tasks.json
+.venv/
+.ruff_cache/
+.pytest_cache/
 
 venv/
 
 __test__.py
 tokens.json
 config.json
+
+# Home Assistant configuration
+config/*
+!config/configuration.yaml
+!config/automations.yaml
+!config/scenes.yaml
+!config/scripts.yaml
+.claude/settings.local.json

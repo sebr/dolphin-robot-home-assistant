@@ -11,16 +11,19 @@ Thanks for helping improve MyDolphin Plus. Contributions are welcome as bug repo
 
 ## Development setup
 
-1. Create and activate a Python virtual environment.
-2. Install dependencies:
+The project uses [uv](https://docs.astral.sh/uv/) for Python 3.13 and its dependencies. A devcontainer (`.devcontainer.json`) sets everything up for VS Code; to work outside it, install uv and run `uv sync`.
 
-   ```bash
-   pip install -r requirements.txt
-   ```
+| Command | What it does |
+|---|---|
+| `scripts/setup` | Installs system packages, uv and the dependencies (used by the devcontainer) |
+| `scripts/develop` | Starts Home Assistant on port 8123 with the integration loaded and debug logging on |
+| `scripts/lint` | Formats and lints with ruff, fixing what it can |
+| `scripts/tests` | Runs the pytest suite |
+| `scripts/version-bump` | Bumps the version in `manifest.json` |
 
-3. Run checks that are relevant to your change before opening a pull request.
+Run `scripts/lint` and `scripts/tests` before opening a pull request; CI runs both, plus hassfest and HACS validation.
 
-This project uses `pyproject.toml` configuration for formatting, import sorting, linting, and tests.
+`.ruff.toml` turns on every ruff rule, then lists the ones the existing code still breaks. New code should pass them anyway. When you clean up a rule across the code, remove it from that list.
 
 ## Pull request guidelines
 
@@ -30,6 +33,14 @@ This project uses `pyproject.toml` configuration for formatting, import sorting,
 - Include test details, even when the test is manual.
 - Keep secrets, tokens, account emails, and robot identifiers out of issues, logs, and pull requests.
 - Prefer small, reviewable pull requests over broad refactors.
+
+## Creating a release
+
+1. Run `scripts/version-bump` on `develop` and pick the bump. Versions look like `v1.0.26` for stable releases and `v1.0.26b3` for betas.
+2. Commit and push the `manifest.json` change.
+3. Run the **Release** workflow from the Actions tab, or `gh workflow run release.yml --ref <branch>`.
+
+The workflow reads the version from `manifest.json`, fails if that tag exists, tags the commit, builds `mydolphin_plus.zip`, and publishes a GitHub release with generated notes. Versions ending in `aN`, `bN` or `rcN` are marked as prereleases.
 
 ## Contributors
 
