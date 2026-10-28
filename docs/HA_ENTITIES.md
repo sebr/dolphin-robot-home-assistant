@@ -115,6 +115,14 @@ The product name loads from the Maytronics API at startup; the versions appear o
 
 ---
 
+## 🔘 Button Entity (1)
+
+| Entity                                                | Type     | Functionality                                                                                                                                                |
+| ----------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [**Reset Filter Indicator**](#reset-filter-indicator) | `button` | Clears the "filter full" indicator after you clean the filter:<br/>• Sends `resetFbi` to the robot, as the MyDolphin app does<br/>• Category: Configuration |
+
+---
+
 ## Summary by Platform
 
 | Platform          | Count  | Purpose                                         |
@@ -126,14 +134,15 @@ The product name loads from the Maytronics API at startup; the versions appear o
 | **Number**        | 7      | LED intensity + 6 cycle time configurations     |
 | **Sensor**        | 12     | Status, diagnostics, cleaning info, errors      |
 | **Binary Sensor** | 2      | AWS and power supply connection status          |
-| **TOTAL**         | **25** | (24 for non-M700, 25 for M700 with temperature) |
+| **Button**        | 1      | Reset the filter indicator                      |
+| **TOTAL**         | **26** | (25 for non-M700, 26 for M700 with temperature) |
 
 ---
 
 ## Entity Categories
 
 - **Main Control**: Vacuum, Remote
-- **Configuration** (EntityCategory.CONFIG): LED, LED Mode, LED Intensity, Cycle Times (7 entities)
+- **Configuration** (EntityCategory.CONFIG): LED, LED Mode, LED Intensity, Cycle Times, Reset Filter Indicator (8 entities)
 - **Diagnostic** (EntityCategory.DIAGNOSTIC): Status, RSSI, Network Name, Clean Mode, Power Supply Status, Robot Status, Robot Type, Cycle Count, AWS Broker, Power Supply Connection, Robot Error, PWS Error (12 entities)
 - **Measurement**: Filter Status, Cycle Time, Cycle Time Left, Temperature (4 entities)
 
@@ -512,6 +521,19 @@ Status of the robot's filter bag indicating when it needs cleaning or replacemen
 
 ---
 
+#### Reset Filter Indicator
+
+| Attribute     | Value                                        |
+| ------------- | -------------------------------------------- |
+| **Entity ID** | `button.{robot_name}_reset_filter_indicator` |
+| **Category**  | Configuration                                |
+
+Press after cleaning the filter to clear the "filter full" indicator. It sends `{"filterBagIndication": {"resetFbi": true}}` to the robot. The Filter Status sensor changes when the robot next reports.
+
+**Attributes**: `status` and `reset_fbi`, the same values as the Filter Status sensor.
+
+---
+
 ### Error Sensors
 
 #### Robot Error
@@ -620,8 +642,9 @@ Entities used to configure the robot's behavior:
 - `select.{robot_name}_led_mode`
 - `number.{robot_name}_led_intensity`
 - `number.{robot_name}_cycle_time_*` (6 cycle time entities)
+- `button.{robot_name}_reset_filter_indicator`
 
-**Total**: 9 entities
+**Total**: 10 entities
 
 **UI Display**: Typically shown in a separate "Configuration" section
 
