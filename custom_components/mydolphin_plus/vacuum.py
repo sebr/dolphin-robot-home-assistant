@@ -94,6 +94,7 @@ class MyDolphinPlusVacuumEntity(MyDolphinPlusBaseEntity, StateVacuumEntity, ABC)
 
             self._attr_extra_state_attributes = attributes
             self._attr_fan_speed = fan_speed
+            self._attr_fan_speed_list = self.coordinator.clean_modes
 
         else:
             self._attr_activity = VacuumActivity.DOCKED

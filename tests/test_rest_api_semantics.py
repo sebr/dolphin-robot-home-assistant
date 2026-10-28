@@ -435,6 +435,10 @@ async def test_load_clean_modes_keeps_the_robots_modes():
         {"Status": "0", "Alert": "nope"},
         _features("291", "999"),
         {"Status": "1", "Data": {"features": [{"id": "90"}]}},
+        {"Status": "1", "Data": ["not", "a", "dict"]},
+        {"Status": "1", "Data": {"features": {"id": "2"}}},
+        {"Status": "1", "Data": {"features": [{"id": "2", "subFeatures": "x"}]}},
+        ["not", "a", "dict"],
     ],
 )
 async def test_load_clean_modes_failure_keeps_connection(payload):

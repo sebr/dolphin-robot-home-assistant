@@ -1,4 +1,7 @@
+import logging
 from enum import StrEnum
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class CleanModes(StrEnum):
@@ -37,18 +40,31 @@ LEGACY_CYCLE_TIME_KEYS = (
 )
 
 
-def supported_clean_modes(features: list[dict]) -> list[CleanModes] | None:
+def supported_clean_modes(features: object) -> list[CleanModes] | None:
     """
     Return the clean modes the features API lists.
 
     Return None when the API lists no clean modes, or one this integration
     doesn't know, so the caller can offer every mode instead.
     """
-    by_id = {feature.get("id"): feature for feature in features}
-    cleaning_mode = by_id.get(CLEANING_MODE_FEATURE) or {}
-    ids = [sub.get("id") for sub in cleaning_mode.get("subFeatures") or []]
+    if not isinstance(features, list):
+        return None
 
-    if any(feature_id not in CLEAN_MODE_FEATURES for feature_id in ids):
+    by_id = {
+        feature.get("id"): feature for feature in features if isinstance(feature, dict)
+    }
+    subs = (by_id.get(CLEANING_MODE_FEATURE) or {}).get("subFeatures")
+    if not isinstance(subs, list):
+        return None
+
+    ids = [sub.get("id") for sub in subs if isinstance(sub, dict)]
+    unknown = [
+        feature_id for feature_id in ids if feature_id not in CLEAN_MODE_FEATURES
+    ]
+    if unknown:
+        _LOGGER.warning(
+            "Robot lists unknown clean modes, offering all of them, IDs: %s", unknown
+        )
         return None
 
     modes = [mode for feature_id in ids if (mode := CLEAN_MODE_FEATURES[feature_id])]

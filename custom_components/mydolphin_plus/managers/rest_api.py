@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import sys
@@ -328,8 +329,7 @@ class RestAPI:
         if not await self._authenticate_user():
             return
 
-        await self._load_robot_details()
-        await self._load_clean_modes()
+        await asyncio.gather(self._load_robot_details(), self._load_clean_modes())
 
         self._device_loaded = True
 
@@ -532,17 +532,23 @@ class RestAPI:
                 payload = await response.json()
 
         except Exception as ex:
-            _LOGGER.warning(f"Failed to load {label}, Error: {ex}")
+            _LOGGER.warning("Failed to load %s, Error: %s", label, ex)
             return None
 
-        if payload.get(API_RESPONSE_STATUS) != API_RESPONSE_STATUS_SUCCESS:
-            alert = payload.get(API_RESPONSE_ALERT)
-            _LOGGER.warning(f"Failed to load {label}, Alert: {alert}")
+        if (
+            not isinstance(payload, dict)
+            or payload.get(API_RESPONSE_STATUS) != API_RESPONSE_STATUS_SUCCESS
+        ):
+            alert = (
+                payload.get(API_RESPONSE_ALERT) if isinstance(payload, dict) else None
+            )
+            _LOGGER.warning("Failed to load %s, Alert: %s", label, alert)
             return None
 
-        return payload.get(API_RESPONSE_DATA) or {}
+        data = payload.get(API_RESPONSE_DATA)
+        return data if isinstance(data, dict) else {}
 
-    async def _load_robot_details(self):
+    async def _load_robot_details(self) -> None:
         """Load the product name and robot family, which the profile lacks."""
         data = await self._load_optional_data(
             "robot details",
@@ -557,7 +563,7 @@ class RestAPI:
             if key in data:
                 self.data[mapped] = data.get(key)
 
-    async def _load_clean_modes(self):
+    async def _load_clean_modes(self) -> None:
         """Load the clean modes the robot supports, which the app lists."""
         data = await self._load_optional_data(
             "robot features",
@@ -571,17 +577,9 @@ class RestAPI:
         if data is None:
             return
 
-        features = data.get("features") or []
-        clean_modes = supported_clean_modes(features)
-
-        if clean_modes is None:
-            _LOGGER.warning(
-                f"Robot features list unknown clean modes, offering all of them, "
-                f"Features: {features}"
-            )
-            return
-
-        self.data[DATA_ROBOT_CLEAN_MODES] = clean_modes
+        clean_modes = supported_clean_modes(data.get("features"))
+        if clean_modes is not None:
+            self.data[DATA_ROBOT_CLEAN_MODES] = clean_modes
 
     async def _refresh_aws_credentials(self):
         # Use cached creds when still valid
