@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Add `Reset Filter Indicator` button entity that sends the filter bag indicator reset (`resetFbi`) to the robot, so the indicator can be cleared from Home Assistant after cleaning the filter
+
 ## v1.0.26
 
 - Keep the stored Cognito login when a token refresh fails for a network, DNS, timeout or other non-authentication reason; only an explicit `NotAuthorizedException` requires reauthentication (#296)
