@@ -229,6 +229,8 @@ ENTITY_DESCRIPTIONS: list[MyDolphinPlusEntityDescription] = [
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        suggested_display_precision=1,
         translation_key=slugify(DATA_KEY_CYCLE_TIME),
     ),
     MyDolphinPlusSensorEntityDescription(
