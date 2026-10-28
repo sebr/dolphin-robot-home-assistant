@@ -62,7 +62,7 @@ The coordinator builds a mapping from entity keys to handler functions at initia
 | `led_mode`            | `_get_led_mode_data`              | aws_data (led)                       | LED pattern + select action              |
 | `led_intensity`       | `_get_led_intensity_data`         | aws_data (led)                       | Brightness value + set action            |
 | `filter_status`       | `_get_filter_status_data`         | aws_data (filterBagIndication)       | Filter bag level + icon                  |
-| `cycle_time`          | `_get_cycle_time_data`            | aws_data (cycleInfo)                 | Duration + start time                    |
+| `cycle_time`          | `_get_cycle_time_data`            | aws_data (cycleInfo)                 | Duration + start time + set action       |
 | `cycle_time_left`     | `_get_cycle_time_left_data`       | aws_data (cycleInfo) + SystemDetails | Remaining seconds + end time             |
 | `rssi`                | `_get_rssi_data`                  | aws_data (debug)                     | WiFi signal strength                     |
 | `network_name`        | `_get_network_name_data`          | aws_data (wifi)                      | Connected network name                   |
@@ -74,7 +74,6 @@ The coordinator builds a mapping from entity keys to handler functions at initia
 | `robot_error`         | `_get_robot_error_data`           | aws_data (robotError)                | Error code (current cycle)               |
 | `power_supply_error`  | `_get_pws_error_data`             | aws_data (pwsError)                  | PSU error code                           |
 | `temperature`         | `_get_temperature_data`           | aws_data (dynamic/iotResponse)       | Water temperature (M700 only)            |
-| `cycle_time_*`        | `_get_clean_mode_cycle_time_data` | ConfigManager                        | Per-mode cycle time + set action         |
 
 ---
 
@@ -221,7 +220,7 @@ sequenceDiagram
 | HA Service              | Coordinator Method                  | AWSClient Method           | MQTT Topic      | Payload                                                |
 | ----------------------- | ----------------------------------- | -------------------------- | --------------- | ------------------------------------------------------ |
 | `button.press`          | `_reset_filter_indicator()`         | `reset_filter_indicator()` | `shadow/update` | `{"filterBagIndication": {"resetFbi": true}}`          |
-| Set cycle time per mode | `_set_clean_mode_cycle_time_data()` | (config only)              | N/A             | Stored in ConfigManager, published on next mode change |
+| `number.set_value`      | `_set_cycle_time()`                 | `set_cycle_time()`         | `shadow/update` | `{"cycleInfo": {"cycleTime": 90}}`, only while cleaning |
 
 ---
 

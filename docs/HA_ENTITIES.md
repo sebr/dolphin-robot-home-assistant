@@ -49,21 +49,16 @@ The product name loads from the Maytronics API at startup; the versions appear o
 
 ---
 
-## 🔢 Number Entities (7)
+## 🔢 Number Entities (2)
 
-| Entity                                             | Type     | Range     | Functionality                                                                                       |
-| -------------------------------------------------- | -------- | --------- | --------------------------------------------------------------------------------------------------- |
-| [**LED Intensity**](#led-intensity)                | `number` | 0-100     | Adjust LED brightness level (0-100%)<br/>• Category: Configuration                                  |
-| [**Cycle Time all**](#cycle-time-configuration)    | `number` | 0-600 min | Set duration for Regular cleaning mode                                                              |
-| [**Cycle Time short**](#cycle-time-configuration)  | `number` | 0-600 min | Set duration for Fast Mode cleaning                                                                 |
-| [**Cycle Time floor**](#cycle-time-configuration)  | `number` | 0-600 min | Set duration for Floor Only cleaning                                                                |
-| [**Cycle Time water**](#cycle-time-configuration)  | `number` | 0-600 min | Set duration for Water Line cleaning                                                                |
-| [**Cycle Time ultra**](#cycle-time-configuration)  | `number` | 0-600 min | Set duration for Ultra Clean mode                                                                   |
-| [**Cycle Time pickup**](#cycle-time-configuration) | `number` | 0-600 min | Set duration for Pickup mode                                                                        |
+| Entity                              | Type     | Range     | Functionality                                                                        |
+| ----------------------------------- | -------- | --------- | ------------------------------------------------------------------------------------ |
+| [**LED Intensity**](#led-intensity) | `number` | 0-100     | Adjust LED brightness level (0-100%)<br/>• Category: Configuration                   |
+| [**Cycle Time**](#cycle-time)       | `number` | 1-600 min | Length of the current clean<br/>• Change it while the robot cleans to set a new time |
 
 ---
 
-## 📊 Sensor Entities (13)
+## 📊 Sensor Entities (12)
 
 ### Status & Diagnostic Sensors
 
@@ -82,7 +77,6 @@ The product name loads from the Maytronics API at startup; the versions appear o
 
 | Entity                                  | Type     | Unit    | Functionality                                                                                                                    |
 | --------------------------------------- | -------- | ------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| [**Cycle Time**](#cycle-time)           | `sensor` | Hours   | Duration of current/last cleaning cycle<br/>• Shows start time in attributes<br/>• Device Class: Duration                        |
 | [**Cycle Time Left**](#cycle-time-left) | `sensor` | Hours   | Remaining time in current cleaning cycle<br/>• Shows start time and expected end time in attributes<br/>• Device Class: Duration |
 
 ### Filter & Maintenance Sensors
@@ -131,20 +125,20 @@ The product name loads from the Maytronics API at startup; the versions appear o
 | **Remote**        | 1      | Manual joystick control                         |
 | **Light**         | 1      | LED control                                     |
 | **Select**        | 1      | LED mode selection                              |
-| **Number**        | 7      | LED intensity + 6 cycle time configurations     |
-| **Sensor**        | 12     | Status, diagnostics, cleaning info, errors      |
+| **Number**        | 2      | LED intensity and cycle time                    |
+| **Sensor**        | 11     | Status, diagnostics, cleaning info, errors      |
 | **Binary Sensor** | 2      | AWS and power supply connection status          |
 | **Button**        | 1      | Reset the filter indicator                      |
-| **TOTAL**         | **26** | (25 for non-M700, 26 for M700 with temperature) |
+| **TOTAL**         | **20** | (19 for non-M700, 20 for M700 with temperature) |
 
 ---
 
 ## Entity Categories
 
-- **Main Control**: Vacuum, Remote
-- **Configuration** (EntityCategory.CONFIG): LED, LED Mode, LED Intensity, Cycle Times, Reset Filter Indicator (8 entities)
+- **Main Control**: Vacuum, Remote, Cycle Time
+- **Configuration** (EntityCategory.CONFIG): LED, LED Mode, LED Intensity, Reset Filter Indicator (4 entities)
 - **Diagnostic** (EntityCategory.DIAGNOSTIC): Status, RSSI, Network Name, Clean Mode, Power Supply Status, Robot Status, Robot Type, Cycle Count, AWS Broker, Power Supply Connection, Robot Error, PWS Error (12 entities)
-- **Measurement**: Filter Status, Cycle Time, Cycle Time Left, Temperature (4 entities)
+- **Measurement**: Filter Status, Cycle Time Left, Temperature (3 entities)
 
 ---
 
@@ -310,28 +304,28 @@ Adjust the brightness level of the robot's LED:
 
 ---
 
-### Cycle Time Configuration (6 entities)
+### Cycle Time
 
-Configure the duration for each cleaning mode:
+| Attribute        | Value                            |
+| ---------------- | -------------------------------- |
+| **Entity ID**    | `number.{robot_name}_cycle_time` |
+| **Platform**     | Number                           |
+| **Device Class** | Duration                         |
+| **Range**        | 1-600                            |
+| **Unit**         | Minutes                          |
 
-| Entity ID                               | Cleaning Mode | Default | Range     |
-| --------------------------------------- | ------------- | ------- | --------- |
-| `number.{robot_name}_cycle_time_all`    | Regular       | 120 min | 0-600 min |
-| `number.{robot_name}_cycle_time_short`  | Fast Mode     | 60 min  | 0-600 min |
-| `number.{robot_name}_cycle_time_floor`  | Floor Only    | 120 min | 0-600 min |
-| `number.{robot_name}_cycle_time_water`  | Water Line    | 120 min | 0-600 min |
-| `number.{robot_name}_cycle_time_ultra`  | Ultra Clean   | 120 min | 0-600 min |
-| `number.{robot_name}_cycle_time_pickup` | Pickup        | 5 min   | 0-600 min |
+How long the current clean runs, as the robot reports it. When the robot is idle, this is the time of its last clean, which it also uses for the next one unless told otherwise.
 
 #### Functionality
 
-- **Set Value** (`number.set_value`) - Configure how long each cleaning mode should run
-- Values are stored in Home Assistant configuration
-- When you start a cleaning cycle with a specific mode, the configured duration is used
+- **Set Value** (`number.set_value`) - Change how long the current clean runs. The robot only accepts this while it cleans or starts up, so setting it while idle fails with an error.
+- Starting a clean from Home Assistant sets the robot's own time for that clean mode, as reported by the robot. A clean started from the MyDolphin app or a schedule keeps the time it chose.
 
-#### Entity Category
+**Attributes**:
 
-Configuration
+- `start_time` - When the cycle started
+
+**Icon**: Dynamic clock icon showing hour
 
 #### Unit
 
@@ -452,25 +446,6 @@ Total number of cleaning cycles completed since the robot was first used.
 ---
 
 ### Cleaning Cycle Sensors
-
-#### Cycle Time
-
-| Attribute        | Value                            |
-| ---------------- | -------------------------------- |
-| **Entity ID**    | `sensor.{robot_name}_cycle_time` |
-| **Device Class** | Duration                         |
-| **State Class**  | Measurement                      |
-| **Unit**         | Hours                            |
-
-Duration of the current or last cleaning cycle. The robot reports minutes; Home Assistant shows hours and minutes by default, such as 2h 30m, and you can pick another unit in the entity settings.
-
-**Attributes**:
-
-- `start_time` - When the cycle started
-
-**Icon**: Dynamic clock icon showing hour
-
----
 
 #### Cycle Time Left
 
@@ -641,10 +616,9 @@ Entities used to configure the robot's behavior:
 - `light.{robot_name}_led`
 - `select.{robot_name}_led_mode`
 - `number.{robot_name}_led_intensity`
-- `number.{robot_name}_cycle_time_*` (6 cycle time entities)
 - `button.{robot_name}_reset_filter_indicator`
 
-**Total**: 10 entities
+**Total**: 4 entities
 
 **UI Display**: Typically shown in a separate "Configuration" section
 
@@ -680,7 +654,7 @@ Entities for primary control and monitoring (no specific category):
 - `vacuum.{robot_name}`
 - `remote.{robot_name}_remote`
 - `sensor.{robot_name}_filter_status`
-- `sensor.{robot_name}_cycle_time`
+- `number.{robot_name}_cycle_time`
 - `sensor.{robot_name}_cycle_time_left`
 - `sensor.{robot_name}_temperature` (M700 only)
 
@@ -761,22 +735,15 @@ target:
   entity_id: number.my_dolphin_led_intensity
 ```
 
-### Configure Cycle Times
+### Change the Current Clean's Time
 
 ```yaml
-# Set regular mode to 90 minutes
+# Run the current clean for 90 minutes; the robot must be cleaning
 service: number.set_value
 data:
   value: 90
 target:
-  entity_id: number.my_dolphin_cycle_time_all
-
-# Set fast mode to 45 minutes
-service: number.set_value
-data:
-  value: 45
-target:
-  entity_id: number.my_dolphin_cycle_time_short
+  entity_id: number.my_dolphin_cycle_time
 ```
 
 ### Automation Examples
@@ -867,12 +834,13 @@ automation:
 | Remote        | 1        | Main          | Manual joystick control           |
 | Light         | 1        | Configuration | LED on/off                        |
 | Select        | 1        | Configuration | LED mode selection                |
-| Number        | 7        | Configuration | LED intensity + 6 cycle times     |
-| Sensor        | 12       | Mixed         | Status, diagnostics, measurements |
-| Binary Sensor | 1        | Diagnostic    | AWS connectivity                  |
-| **TOTAL**     | **24\*** |               |                                   |
+| Number        | 2        | Mixed         | LED intensity and cycle time      |
+| Sensor        | 11       | Mixed         | Status, diagnostics, measurements |
+| Binary Sensor | 2        | Diagnostic    | Cloud and power supply connection |
+| Button        | 1        | Configuration | Reset the filter indicator        |
+| **TOTAL**     | **20\*** |               |                                   |
 
-\* 23 entities for standard models, 24 for M700 models (includes temperature sensor)
+\* 19 entities for standard models, 20 for M700 models (includes temperature sensor)
 
 ---
 

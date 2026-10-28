@@ -7,6 +7,7 @@ https://home-assistant.io/components/mydolphin_plus/
 import logging
 import sys
 
+from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import ConfigEntry
@@ -21,6 +22,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import slugify
 
+from .common.clean_modes import LEGACY_CYCLE_TIME_KEYS
 from .common.consts import (
     DATA_KEY_CYCLE_TIME,
     DATA_KEY_CYCLE_TIME_LEFT,
@@ -44,7 +46,6 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 # Units for sensors that older versions created without a suggested unit
 SUGGESTED_TIME_UNITS = {
-    slugify(DATA_KEY_CYCLE_TIME): UnitOfTime.HOURS,
     slugify(DATA_KEY_CYCLE_TIME_LEFT): UnitOfTime.HOURS,
 }
 
@@ -86,6 +87,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         if is_initialized:
             _remove_battery_entity(hass, entry)
+            _remove_old_cycle_time_entities(hass, entry)
             _set_suggested_time_units(hass, entry)
 
             coordinator = MyDolphinPlusCoordinator(hass, config_manager)
@@ -128,11 +130,35 @@ def _remove_battery_entity(hass: HomeAssistant, entry: ConfigEntry):
             entity_registry.async_remove(entity.entity_id)
 
 
+def _remove_old_cycle_time_entities(hass: HomeAssistant, entry: ConfigEntry):
+    """
+    Remove the Cycle Time sensor and the cycle time numbers for each mode.
+
+    The Cycle Time number replaces them.
+    """
+    entity_registry = er.async_get(hass)
+    cycle_time_key = slugify(DATA_KEY_CYCLE_TIME)
+
+    for entity in er.async_entries_for_config_entry(entity_registry, entry.entry_id):
+        is_old_sensor = (
+            entity.domain == SENSOR_DOMAIN and entity.translation_key == cycle_time_key
+        )
+        is_old_preset = (
+            entity.domain == NUMBER_DOMAIN
+            and entity.translation_key in LEGACY_CYCLE_TIME_KEYS
+        )
+
+        if is_old_sensor or is_old_preset:
+            _LOGGER.info(f"Removing old cycle time entity {entity.entity_id}")
+
+            entity_registry.async_remove(entity.entity_id)
+
+
 def _set_suggested_time_units(hass: HomeAssistant, entry: ConfigEntry):
     """
-    Show Cycle Time and Cycle Time Left in hours.
+    Show Cycle Time Left in hours.
 
-    New entities get these as their suggested units. Home Assistant only
+    New entities get this as their suggested unit. Home Assistant only
     applies a suggested unit when it first creates an entity, so set it here
     for entities made by older versions. A unit the user picked stays.
     """
