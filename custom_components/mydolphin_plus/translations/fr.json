@@ -104,6 +104,7 @@
           "pickup": "Ramassage",
           "short": "Rapide",
           "ultra": "Ultra propre",
+          "stairs": "Couverture complète",
           "water": "Ligne d'eau"
         }
       },
@@ -266,6 +267,7 @@
               "pickup": "Ramassage",
               "short": "Rapide",
               "ultra": "Ultra propre",
+              "stairs": "Couverture complète",
               "water": "Ligne d'eau"
             }
           }

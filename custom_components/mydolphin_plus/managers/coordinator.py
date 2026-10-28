@@ -79,6 +79,7 @@ from ..common.consts import (
     DATA_LED_ENABLE,
     DATA_LED_INTENSITY,
     DATA_LED_MODE,
+    DATA_ROBOT_CLEAN_MODES,
     DATA_ROBOT_NAME,
     DATA_ROBOT_PRODUCT_DESCRIPTION,
     DATA_ROBOT_PRODUCT_NAME,
@@ -194,6 +195,11 @@ class MyDolphinPlusCoordinator(DataUpdateCoordinator):
         data = self._api.data
 
         return data
+
+    @property
+    def clean_modes(self) -> list[str]:
+        """Return the clean modes the robot supports, or every mode if unknown."""
+        return self.api_data.get(DATA_ROBOT_CLEAN_MODES) or list(CleanModes)
 
     @property
     def aws_data(self) -> dict:

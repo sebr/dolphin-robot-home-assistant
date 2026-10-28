@@ -14,6 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.dispatcher import dispatcher_send
 
+from ..common.clean_modes import supported_clean_modes
 from ..common.connectivity_status import ConnectivityStatus
 from ..common.consts import (
     API_RESPONSE_ALERT,
@@ -34,10 +35,13 @@ from ..common.consts import (
     COGNITO_ENDPOINT,
     COGNITO_HEADER_TARGET,
     COGNITO_TARGET_PREFIX,
+    DATA_ROBOT_CLEAN_MODES,
     DATA_ROBOT_DETAILS,
     ID_TOKEN_REFRESH_WINDOW_SECONDS,
     MIN_TOKEN_FETCH_INTERVAL,
     ROBOT_DETAILS_URL,
+    ROBOT_FEATURES_DEVICE_TYPE,
+    ROBOT_FEATURES_URL,
     SIGNAL_API_STATUS,
     SIGNAL_DEVICE_NEW,
     TO_REDACT,
@@ -324,6 +328,7 @@ class RestAPI:
             return
 
         await self._load_robot_details()
+        await self._load_clean_modes()
 
         self._device_loaded = True
 
@@ -532,6 +537,51 @@ class RestAPI:
         for key, mapped in DATA_ROBOT_DETAILS.items():
             if key in data:
                 self.data[mapped] = data.get(key)
+
+    async def _load_clean_modes(self):
+        """
+        Load the clean modes the robot supports, which the app lists.
+
+        On failure the vacuum offers every clean mode, so this only logs a
+        warning and leaves the connection status alone.
+        """
+        headers = _build_headers(
+            base=BEARER_HEADERS_BASE,
+            id_token=self._config_manager.id_token,
+            integration_info=self._integration_info,
+        )
+        params = {
+            "Sernum": self._config_manager.serial_number,
+            "device_type": ROBOT_FEATURES_DEVICE_TYPE,
+        }
+
+        try:
+            async with self._session.get(
+                ROBOT_FEATURES_URL, headers=headers, params=params
+            ) as response:
+                response.raise_for_status()
+                payload = await response.json()
+
+        except Exception as ex:
+            _LOGGER.warning(f"Failed to load robot features, Error: {ex}")
+            return
+
+        if payload.get(API_RESPONSE_STATUS) != API_RESPONSE_STATUS_SUCCESS:
+            alert = payload.get(API_RESPONSE_ALERT)
+            _LOGGER.warning(f"Failed to load robot features, Alert: {alert}")
+            return
+
+        features = (payload.get(API_RESPONSE_DATA) or {}).get("features") or []
+        clean_modes = supported_clean_modes(features)
+
+        if clean_modes is None:
+            _LOGGER.warning(
+                f"Robot features list unknown clean modes, offering all of them, "
+                f"Features: {features}"
+            )
+            return
+
+        self.data[DATA_ROBOT_CLEAN_MODES] = clean_modes
 
     async def _refresh_aws_credentials(self):
         # Use cached creds when still valid

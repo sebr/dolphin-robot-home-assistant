@@ -33,7 +33,6 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.util import slugify
 
-from .clean_modes import CleanModes
 from .consts import (
     DATA_KEY_AWS_BROKER,
     DATA_KEY_CLEAN_MODE,
@@ -79,7 +78,6 @@ class MyDolphinPlusVacuumEntityDescription(
 
     platform: Platform | None = Platform.VACUUM
     features: VacuumEntityFeature = VacuumEntityFeature(0)
-    fan_speed_list: list[str] = ()
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -142,7 +140,6 @@ ENTITY_DESCRIPTIONS: list[MyDolphinPlusEntityDescription] = [
         key=slugify(DATA_KEY_VACUUM),
         name="",
         features=VACUUM_FEATURES,
-        fan_speed_list=list(CleanModes),
         translation_key=slugify(DATA_KEY_VACUUM),
     ),
     MyDolphinPlusRemoteEntityDescription(

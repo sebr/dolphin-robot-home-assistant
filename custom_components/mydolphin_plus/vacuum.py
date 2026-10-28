@@ -55,7 +55,7 @@ class MyDolphinPlusVacuumEntity(MyDolphinPlusBaseEntity, StateVacuumEntity, ABC)
         super().__init__(entity_description, coordinator)
 
         self._attr_supported_features = entity_description.features
-        self._attr_fan_speed_list = entity_description.fan_speed_list
+        self._attr_fan_speed_list = coordinator.clean_modes
 
         self._attr_activity = VacuumActivity.DOCKED
 

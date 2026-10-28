@@ -69,6 +69,7 @@ async def test_rest_api_logs_no_credentials(
     monkeypatch.setattr(api, "_ensure_id_token_valid", succeed)
     monkeypatch.setattr(api, "_authenticate_user", succeed)
     monkeypatch.setattr(api, "_load_robot_details", do_nothing)
+    monkeypatch.setattr(api, "_load_clean_modes", do_nothing)
     monkeypatch.setattr(api, "_async_dispatcher_send", lambda *_args: None)
     api._config_manager = type("ConfigManager", (), {"entry_id": "entry-id"})()
 
