@@ -7,9 +7,15 @@ https://home-assistant.io/components/mydolphin_plus/
 import logging
 import sys
 
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_USERNAME, EVENT_HOMEASSISTANT_START
+from homeassistant.const import (
+    CONF_UNIT_OF_MEASUREMENT,
+    CONF_USERNAME,
+    EVENT_HOMEASSISTANT_START,
+    UnitOfTime,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import entity_registry as er
@@ -71,6 +77,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         if is_initialized:
             _remove_battery_entity(hass, entry)
+            _show_cycle_time_left_in_minutes(hass, entry)
 
             coordinator = MyDolphinPlusCoordinator(hass, config_manager)
 
@@ -110,6 +117,34 @@ def _remove_battery_entity(hass: HomeAssistant, entry: ConfigEntry):
             _LOGGER.info(f"Removing battery sensor {entity.entity_id}")
 
             entity_registry.async_remove(entity.entity_id)
+
+
+def _show_cycle_time_left_in_minutes(hass: HomeAssistant, entry: ConfigEntry):
+    """
+    Show Cycle Time Left in minutes unless the user picked a unit.
+
+    New entities get minutes as their suggested unit. Home Assistant only
+    applies that when it first creates an entity, so set it here for
+    entities made by older versions, which showed seconds.
+    """
+    entity_registry = er.async_get(hass)
+
+    for entity in er.async_entries_for_config_entry(entity_registry, entry.entry_id):
+        is_cycle_time_left = (
+            entity.domain == SENSOR_DOMAIN
+            and entity.original_device_class == SensorDeviceClass.DURATION
+            and entity.unit_of_measurement == UnitOfTime.SECONDS
+        )
+        sensor_options = entity.options.get(SENSOR_DOMAIN, {})
+
+        if is_cycle_time_left and CONF_UNIT_OF_MEASUREMENT not in sensor_options:
+            _LOGGER.info(f"Showing {entity.entity_id} in minutes")
+
+            entity_registry.async_update_entity_options(
+                entity.entity_id,
+                SENSOR_DOMAIN,
+                {**sensor_options, CONF_UNIT_OF_MEASUREMENT: UnitOfTime.MINUTES},
+            )
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):

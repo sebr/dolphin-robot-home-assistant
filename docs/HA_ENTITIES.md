@@ -83,7 +83,7 @@ The product name loads from the Maytronics API at startup; the versions appear o
 | Entity                                  | Type     | Unit    | Functionality                                                                                                                    |
 | --------------------------------------- | -------- | ------- | -------------------------------------------------------------------------------------------------------------------------------- |
 | [**Cycle Time**](#cycle-time)           | `sensor` | Minutes | Duration of current/last cleaning cycle<br/>• Shows start time in attributes<br/>• Device Class: Duration                        |
-| [**Cycle Time Left**](#cycle-time-left) | `sensor` | Seconds | Remaining time in current cleaning cycle<br/>• Shows start time and expected end time in attributes<br/>• Device Class: Duration |
+| [**Cycle Time Left**](#cycle-time-left) | `sensor` | Minutes | Remaining time in current cleaning cycle<br/>• Shows start time and expected end time in attributes<br/>• Device Class: Duration |
 
 ### Filter & Maintenance Sensors
 
@@ -471,9 +471,9 @@ Duration of the current or last cleaning cycle.
 | **Entity ID**    | `sensor.{robot_name}_cycle_time_left` |
 | **Device Class** | Duration                              |
 | **State Class**  | Measurement                           |
-| **Unit**         | Seconds                               |
+| **Unit**         | Minutes                               |
 
-Remaining time in the current cleaning cycle.
+Remaining time in the current cleaning cycle. The robot reports seconds; Home Assistant shows minutes by default, and you can pick another unit in the entity settings.
 
 **Attributes**:
 
