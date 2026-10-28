@@ -36,6 +36,9 @@
     "binary_sensor": {
       "aws_broker": {
         "name": "AWS Broker"
+      },
+      "power_supply_connection": {
+        "name": "Power Supply Connection"
       }
     },
     "light": {

@@ -10,7 +10,7 @@ The MyDolphin Plus integration creates **24 entities** (23 for standard models, 
 
 The integration creates two devices:
 
-- **{Robot Name} Power Supply** holds the Wi-Fi and cloud connection. It shows the power supply firmware, and has the Power Supply Status, Power Supply Error, RSSI, Network Name and AWS Broker entities.
+- **{Robot Name} Power Supply** holds the Wi-Fi and cloud connection. It shows the power supply firmware, and has the Power Supply Status, Power Supply Error, RSSI, Network Name, AWS Broker and Power Supply Connection entities.
 - **{Robot Name}** is the robot, connected through the power supply. It shows the product name (for example DOLPHIN PREMIUM 2000 AU) as its model, the part number as its model ID, the robot firmware, the robot type (for example S4) as its hardware, and the serial number. It has every other entity.
 
 The product name loads from the Maytronics API at startup; the versions appear once the robot first reports its state.
@@ -106,11 +106,12 @@ The product name loads from the Maytronics API at startup; the versions appear o
 
 ---
 
-## 🔌 Binary Sensor Entity (1)
+## 🔌 Binary Sensor Entities (2)
 
 | Entity                                     | Type            | Functionality                                                                                                                                                                                          |
 | ------------------------------------------ | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | [**AWS Broker**](#aws-broker-connectivity) | `binary_sensor` | AWS IoT MQTT connection status:<br/>• **On** - Connected to AWS IoT<br/>• **Off** - Disconnected<br/>• Shows detailed status in attributes<br/>• Device Class: Connectivity<br/>• Category: Diagnostic |
+| [**Power Supply Connection**](#power-supply-connection) | `binary_sensor` | Whether the power supply is connected to the Maytronics cloud:<br/>• **On** - Online<br/>• **Off** - Offline<br/>• Device Class: Connectivity<br/>• Category: Diagnostic |
 
 ---
 
@@ -124,8 +125,8 @@ The product name loads from the Maytronics API at startup; the versions appear o
 | **Select**        | 1      | LED mode selection                              |
 | **Number**        | 7      | LED intensity + 6 cycle time configurations     |
 | **Sensor**        | 12     | Status, diagnostics, cleaning info, errors      |
-| **Binary Sensor** | 1      | AWS connectivity status                         |
-| **TOTAL**         | **24** | (23 for non-M700, 24 for M700 with temperature) |
+| **Binary Sensor** | 2      | AWS and power supply connection status          |
+| **TOTAL**         | **25** | (24 for non-M700, 25 for M700 with temperature) |
 
 ---
 
@@ -133,7 +134,7 @@ The product name loads from the Maytronics API at startup; the versions appear o
 
 - **Main Control**: Vacuum, Remote
 - **Configuration** (EntityCategory.CONFIG): LED, LED Mode, LED Intensity, Cycle Times (7 entities)
-- **Diagnostic** (EntityCategory.DIAGNOSTIC): Status, RSSI, Network Name, Clean Mode, Power Supply Status, Robot Status, Robot Type, Cycle Count, AWS Broker, Robot Error, PWS Error (11 entities)
+- **Diagnostic** (EntityCategory.DIAGNOSTIC): Status, RSSI, Network Name, Clean Mode, Power Supply Status, Robot Status, Robot Type, Cycle Count, AWS Broker, Power Supply Connection, Robot Error, PWS Error (12 entities)
 - **Measurement**: Filter Status, Cycle Time, Cycle Time Left, Temperature (4 entities)
 
 ---
@@ -592,6 +593,21 @@ This entity is crucial for monitoring the health of the integration:
 
 ---
 
+### Power Supply Connection
+
+| Attribute           | Value                                                |
+| ------------------- | ---------------------------------------------------- |
+| **Entity ID**       | `binary_sensor.{robot_name}_power_supply_connection` |
+| **Device Class**    | Connectivity                                         |
+| **Entity Category** | Diagnostic                                           |
+| **Device**          | {Robot Name} Power Supply                            |
+
+Whether the power supply is connected to the Maytronics cloud, from `isConnected.connected` in the robot's state. This differs from AWS Broker, which is Home Assistant's own connection.
+
+The power supply stays online when the robot is off between cycles, so this can be on while the robot reports as not connected.
+
+---
+
 ## Entity Categories
 
 Home Assistant groups entities into categories for better organization:
@@ -626,8 +642,9 @@ Entities that provide diagnostic information and monitoring:
 - `sensor.{robot_name}_robot_error`
 - `sensor.{robot_name}_pws_error`
 - `binary_sensor.{robot_name}_aws_broker`
+- `binary_sensor.{robot_name}_power_supply_connection`
 
-**Total**: 11 entities
+**Total**: 12 entities
 
 **UI Display**: Typically hidden by default in the UI, accessible via "Show all"
 
