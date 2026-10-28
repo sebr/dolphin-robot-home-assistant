@@ -41,6 +41,11 @@
         "name": "Power Supply Connection"
       }
     },
+    "button": {
+      "reset_filter_indicator": {
+        "name": "Reset Filter Indicator"
+      }
+    },
     "light": {
       "led": {
         "name": "LED"
