@@ -78,6 +78,7 @@
           "pickup": "Raccolta",
           "short": "Modalit\u00e0 veloce",
           "ultra": "Ultra pulito",
+          "stairs": "Copertura completa",
           "water": "Linea di galleggiamento"
         }
       },
@@ -240,6 +241,7 @@
               "pickup": "Raccolta",
               "short": "Modalit\u00e0 veloce",
               "ultra": "Ultra pulito",
+              "stairs": "Copertura completa",
               "water": "Linea di galleggiamento"
             }
           }
