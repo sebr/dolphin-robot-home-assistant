@@ -45,7 +45,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 # Units for sensors that older versions created without a suggested unit
 SUGGESTED_TIME_UNITS = {
     slugify(DATA_KEY_CYCLE_TIME): UnitOfTime.HOURS,
-    slugify(DATA_KEY_CYCLE_TIME_LEFT): UnitOfTime.MINUTES,
+    slugify(DATA_KEY_CYCLE_TIME_LEFT): UnitOfTime.HOURS,
 }
 
 
@@ -130,7 +130,7 @@ def _remove_battery_entity(hass: HomeAssistant, entry: ConfigEntry):
 
 def _set_suggested_time_units(hass: HomeAssistant, entry: ConfigEntry):
     """
-    Show Cycle Time in hours and Cycle Time Left in minutes.
+    Show Cycle Time and Cycle Time Left in hours.
 
     New entities get these as their suggested units. Home Assistant only
     applies a suggested unit when it first creates an entity, so set it here

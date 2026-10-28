@@ -1,4 +1,4 @@
-"""Cycle Time shows hours and Cycle Time Left shows minutes on older entities."""
+"""Cycle Time and Cycle Time Left show hours on older entities."""
 
 from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant
@@ -49,7 +49,7 @@ async def test_cycle_time_sensors_get_suggested_units(hass: HomeAssistant) -> No
         "suggested_display_precision": 2,
         "unit_of_measurement": UnitOfTime.HOURS,
     }
-    assert time_left.options["sensor"] == {"unit_of_measurement": UnitOfTime.MINUTES}
+    assert time_left.options["sensor"] == {"unit_of_measurement": UnitOfTime.HOURS}
     assert "sensor" not in cycle_count.options
 
 
