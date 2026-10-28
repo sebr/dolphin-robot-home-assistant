@@ -9,6 +9,7 @@ from typing import Any
 
 from aiohttp import ClientResponseError, ClientSession
 from aiohttp.hdrs import METH_GET, METH_POST
+from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.dispatcher import dispatcher_send
@@ -40,6 +41,7 @@ from ..common.consts import (
     ROBOT_DETAILS_URL,
     SIGNAL_API_STATUS,
     SIGNAL_DEVICE_NEW,
+    TO_REDACT,
 )
 from ..common.integration_info import IntegrationInfo
 from ..models.config_data import ConfigData
@@ -318,7 +320,7 @@ class RestAPI:
 
         self._async_dispatcher_send(SIGNAL_DEVICE_NEW, self._config_manager.entry_id)
 
-        _LOGGER.debug(f"API Data updated: {self.data}")
+        _LOGGER.debug(f"API Data updated: {async_redact_data(self.data, TO_REDACT)}")
 
     async def _login(self):
         if self._config_manager.refresh_token is None:
