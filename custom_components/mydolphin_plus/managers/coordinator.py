@@ -198,8 +198,12 @@ class MyDolphinPlusCoordinator(DataUpdateCoordinator):
 
     @property
     def clean_modes(self) -> list[str]:
-        """Return the clean modes the robot supports, or every mode if unknown."""
-        return self.api_data.get(DATA_ROBOT_CLEAN_MODES) or list(CleanModes)
+        """Return the clean modes the robot supports and pickup, or every mode."""
+        clean_modes = self.api_data.get(DATA_ROBOT_CLEAN_MODES)
+        if not clean_modes:
+            return list(CleanModes)
+
+        return [*clean_modes, CleanModes.PICKUP]
 
     @property
     def aws_data(self) -> dict:

@@ -190,6 +190,10 @@ BEARER_HEADERS_BASE = {
     "Accept": "*/*",
 }
 
+# Time limit for requests whose data the integration can do without, so a slow
+# server can't hold up startup
+OPTIONAL_REQUEST_TIMEOUT_SECONDS = 10
+
 # Refresh the IdToken if it expires within this many seconds
 ID_TOKEN_REFRESH_WINDOW_SECONDS = 300
 

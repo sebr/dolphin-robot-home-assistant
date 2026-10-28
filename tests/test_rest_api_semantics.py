@@ -89,6 +89,11 @@ class FakeSession:
         self.last_params = params
         return FakeResponse(self._get_payload)
 
+    def request(self, method, url, timeout=None, **kwargs):
+        if method == "POST":
+            return self.post(url, **kwargs)
+        return self.get(url, **kwargs)
+
 
 class DummyConfigManager:
     """Config manager surface needed by RestAPI for these tests."""
@@ -417,7 +422,7 @@ async def test_load_clean_modes_keeps_the_robots_modes():
 
     await api._load_clean_modes()
 
-    assert api.data["Clean Modes"] == ["stairs", "all", "floor", "short", "pickup"]
+    assert api.data["Clean Modes"] == ["stairs", "all", "floor", "short"]
     assert api._session.last_params["Sernum"] == "N1234"
     assert api._session.last_headers["Authorization"] == "Bearer id-token"
     assert api.status == ConnectivityStatus.CONNECTED

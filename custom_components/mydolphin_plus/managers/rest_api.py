@@ -7,7 +7,7 @@ import time
 from datetime import datetime
 from typing import Any
 
-from aiohttp import ClientResponseError, ClientSession
+from aiohttp import ClientResponseError, ClientSession, ClientTimeout
 from aiohttp.hdrs import METH_GET, METH_POST
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
@@ -39,6 +39,7 @@ from ..common.consts import (
     DATA_ROBOT_DETAILS,
     ID_TOKEN_REFRESH_WINDOW_SECONDS,
     MIN_TOKEN_FETCH_INTERVAL,
+    OPTIONAL_REQUEST_TIMEOUT_SECONDS,
     ROBOT_DETAILS_URL,
     ROBOT_FEATURES_DEVICE_TYPE,
     ROBOT_FEATURES_URL,
@@ -501,77 +502,76 @@ class RestAPI:
 
         return True
 
-    async def _load_robot_details(self):
+    async def _load_optional_data(
+        self, label: str, method: str, url: str, **kwargs: Any
+    ) -> dict | None:
         """
-        Load the product name and robot family, which the profile lacks.
+        Send a request whose data the integration can do without.
 
-        The integration works without them, so a failure here only logs a
-        warning and leaves the connection status alone.
+        Return the response data, or None after logging a warning. Either way
+        the connection status stays as it is.
         """
+        extra = (
+            {"Content-Type": "application/x-www-form-urlencoded"}
+            if method == METH_POST
+            else None
+        )
         headers = _build_headers(
             base=BEARER_HEADERS_BASE,
             id_token=self._config_manager.id_token,
-            extra={"Content-Type": "application/x-www-form-urlencoded"},
+            extra=extra,
             integration_info=self._integration_info,
         )
-        body = f"SERNUM={self._config_manager.serial_number}"
+        timeout = ClientTimeout(total=OPTIONAL_REQUEST_TIMEOUT_SECONDS)
 
         try:
-            async with self._session.post(
-                ROBOT_DETAILS_URL, headers=headers, data=body
+            async with self._session.request(
+                method, url, headers=headers, timeout=timeout, **kwargs
             ) as response:
                 response.raise_for_status()
                 payload = await response.json()
 
         except Exception as ex:
-            _LOGGER.warning(f"Failed to load robot details, Error: {ex}")
-            return
+            _LOGGER.warning(f"Failed to load {label}, Error: {ex}")
+            return None
 
         if payload.get(API_RESPONSE_STATUS) != API_RESPONSE_STATUS_SUCCESS:
             alert = payload.get(API_RESPONSE_ALERT)
-            _LOGGER.warning(f"Failed to load robot details, Alert: {alert}")
-            return
+            _LOGGER.warning(f"Failed to load {label}, Alert: {alert}")
+            return None
 
-        data = payload.get(API_RESPONSE_DATA) or {}
+        return payload.get(API_RESPONSE_DATA) or {}
+
+    async def _load_robot_details(self):
+        """Load the product name and robot family, which the profile lacks."""
+        data = await self._load_optional_data(
+            "robot details",
+            METH_POST,
+            ROBOT_DETAILS_URL,
+            data=f"SERNUM={self._config_manager.serial_number}",
+        )
+        if data is None:
+            return
 
         for key, mapped in DATA_ROBOT_DETAILS.items():
             if key in data:
                 self.data[mapped] = data.get(key)
 
     async def _load_clean_modes(self):
-        """
-        Load the clean modes the robot supports, which the app lists.
-
-        On failure the vacuum offers every clean mode, so this only logs a
-        warning and leaves the connection status alone.
-        """
-        headers = _build_headers(
-            base=BEARER_HEADERS_BASE,
-            id_token=self._config_manager.id_token,
-            integration_info=self._integration_info,
+        """Load the clean modes the robot supports, which the app lists."""
+        data = await self._load_optional_data(
+            "robot features",
+            METH_GET,
+            ROBOT_FEATURES_URL,
+            params={
+                "Sernum": self._config_manager.serial_number,
+                "device_type": ROBOT_FEATURES_DEVICE_TYPE,
+            },
         )
-        params = {
-            "Sernum": self._config_manager.serial_number,
-            "device_type": ROBOT_FEATURES_DEVICE_TYPE,
-        }
-
-        try:
-            async with self._session.get(
-                ROBOT_FEATURES_URL, headers=headers, params=params
-            ) as response:
-                response.raise_for_status()
-                payload = await response.json()
-
-        except Exception as ex:
-            _LOGGER.warning(f"Failed to load robot features, Error: {ex}")
+        if data is None:
             return
 
-        if payload.get(API_RESPONSE_STATUS) != API_RESPONSE_STATUS_SUCCESS:
-            alert = payload.get(API_RESPONSE_ALERT)
-            _LOGGER.warning(f"Failed to load robot features, Alert: {alert}")
-            return
-
-        features = (payload.get(API_RESPONSE_DATA) or {}).get("features") or []
+        features = data.get("features") or []
         clean_modes = supported_clean_modes(features)
 
         if clean_modes is None:
