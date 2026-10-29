@@ -172,14 +172,14 @@ Activities: `stop`, `forward`, `backward`, `left`, `right`.
 # Start manual mode and drive forward
 service: remote.turn_on
 target:
-  entity_id: remote.{robot_name}_remote
+  entity_id: remote.{robot_name}
 data:
   activity: forward
 
 # Stop and leave manual mode
 service: remote.turn_off
 target:
-  entity_id: remote.{robot_name}_remote
+  entity_id: remote.{robot_name}
 ```
 
 ## Error Event
@@ -191,8 +191,8 @@ The integration fires a `mydolphin_plus_error` event when the robot or power sup
   "name": "{Robot | Power Supply} Error",
   "Robot Name": "{Robot Name}",
   "state": 1,
-  "Description": "details",
-  "Instructions": "when relevant"
+  "Description": "{Robot | Power Supply} Error",
+  "instructions": "steps to clear the fault, when known"
 }
 ```
 
@@ -213,7 +213,7 @@ The integration fires a `mydolphin_plus_error` event when the robot or power sup
 | 12   | DC in voltage 23V             | 25   | Drive 2 motor failure     |
 |      |                               | 255  | OK                        |
 
-<sup>†</sup> The event's `Instructions` field gives steps to clear the fault.
+<sup>†</sup> The event's `instructions` field gives steps to clear the fault.
 
 ## Dashboard Card
 
@@ -227,7 +227,6 @@ features:
   - type: vacuum-commands
     commands:
       - start_pause
-      - stop
       - return_home
 ```
 
