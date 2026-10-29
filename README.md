@@ -1,212 +1,242 @@
-# MyDolphin Plus
+<!-- markdownlint-disable no-inline-html -->
+# dolphin-robot-home-assistant
 
-## Description
+Maytronics Dolphin pool robot component for [Home Assistant](https://www.home-assistant.io/), for robots that use the MyDolphin Plus app.
 
-Integration with MyDolphin Plus to monitor and control your robot
+This is a fork of [sh00t2kill/dolphin-robot](https://github.com/sh00t2kill/dolphin-robot), the integration in the default HACS store. It adds fixes and features that haven't reached upstream yet. To use it, add this repository to HACS as a custom repository (see [Installation](#installation)).
 
-[Changelog](https://github.com/sh00t2kill/dolphin-robot/blob/master/CHANGELOG.md)
+<!-- If this integration has been useful to you, please consider chipping in and buying me a coffee! -->
 
-## Authentication
+<a href="https://www.buymeacoffee.com/sebr" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee"></a>
 
-Authentication uses the same email-OTP flow as the official MyDolphin Plus mobile app:
+## Supported Devices
 
-1. Enter your account email when adding the integration.
-2. Maytronics emails a one-time login code.
-3. Enter the code in Home Assistant — the integration exchanges it for a refresh token and connects to the robot.
+This integration works with Dolphin robots that:
 
-The refresh token is reused on every Home Assistant restart and silently renewed (~hourly), so you should only need to re-enter an OTP if the refresh token expires (Cognito default ~30 days) or you remove and re-add the integration.
+- use the [MyDolphin Plus app](https://www.maytronics.com/), and
+- connect to the cloud through the power supply's Wi-Fi ("Always Connected").
 
-> **Upgrading from a pre-OTP version (≤ 1.0.25b5):** the legacy email/password login endpoint has been retired by Maytronics. After updating, Home Assistant should prompt you to **Reconfigure / Reauthenticate** the existing entry so you can complete OTP login without reinstalling.
+It talks to the same Maytronics cloud as the app, so it needs a MyDolphin Plus account with the robot already paired.
 
-## How to
+The following robots have been tested with this fork. As an unofficial project that Maytronics doesn't support, it can't promise to keep working with current or future robots.
 
-#### Requirements
+- Dolphin Premium 2000 (robot type S4)
 
-- MyDolphin Plus robot with Always Connected support
-- MyDolphin Plus App
-- MyDolphin Plus account
+M700 robots also get a water temperature sensor.
 
-#### Installations via HACS
+## Supported Entities
 
-- In HACS, look for "MyDolphin Plus" and install
-- In Configuration --> Integrations - Add MyDolphin Plus
+Home Assistant creates two devices: the **robot**, and its **power supply**, which holds the Wi-Fi and cloud connection.
 
-#### Integration settings
+- `vacuum` to start, pause and pick up the robot, and to choose its clean mode.
+- `number` for the current clean's cycle time and the LED brightness.
+- `sensor` for status, clean mode, cycle time left, filter bag, cycle count, errors, Wi-Fi signal and network name, and water temperature on M700 robots.
+- `binary_sensor` for the cloud connection and the power supply connection.
+- `button` to reset the filter bag indicator.
+- `light` and `select` to turn the robot's LED on and off and choose its mode.
+- `remote` to drive the robot by hand.
 
-###### Basic configuration (Configuration -> Integrations -> Add MyDolphin Plus)
+## Installation
 
-| Field      | Type    | Required | Description                                                                           |
-| ---------- | ------- | -------- | ------------------------------------------------------------------------------------- |
-| Title      | Textbox | yes      | Display name for the integration entry                                                |
-| Email      | Textbox | yes      | Email of your MyDolphin Plus account — Maytronics emails a login code to this address |
-| Login code | Textbox | yes      | The one-time code from the email, entered on the second step of the config flow       |
+Install through the [Home Assistant Community Store (HACS)](https://hacs.xyz/). [![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://hacs.xyz/docs/faq/custom_repositories/)
 
-###### Configuration validations
+### 1. Install via HACS
 
-Upon submitting the form, the integration verifies the credentials by:
+This fork isn't in the default HACS store, so add it as a custom repository first. If you don't use HACS, download the latest version from the [releases page](https://github.com/sebr/dolphin-robot-home-assistant/releases), copy `custom_components/mydolphin_plus` into your Home Assistant `config/custom_components` folder, and go to step 2.
 
-1. Triggering Cognito `CUSTOM_AUTH` (sends the OTP email).
-2. Exchanging the submitted OTP for an `IdToken` + `RefreshToken`.
-3. Calling `apps.maytronics.com/mobapi/user/authenticate-user/` to confirm the account has a paired robot.
+1. Open HACS.
+2. Open the menu (⋮) in the top right and choose **Custom repositories**.
+3. Enter `https://github.com/sebr/dolphin-robot-home-assistant`, choose the **Integration** type, and click **Add**.
+4. Search for `MyDolphin Plus` and download it.
+5. Restart Home Assistant.
 
-The following errors can appear:
+The fork and upstream share the `mydolphin_plus` domain, so only one can be installed. If you have the upstream version, remove it in HACS before you download this one. Your MyDolphin Plus entry carries over.
 
-- **Invalid account** — the email is empty or rejected by Cognito (no such user)
-- **Failed to send login code, check the email and try again** — Cognito refused to send an OTP (rate limit or unknown user)
-- **Invalid or expired login code** — the OTP is wrong, expired, or was used already
-- **Invalid server details** — could not reach Cognito or `apps.maytronics.com`
-- **Integration already configured with the name** — an entry with that title already exists
+### 2. Configure via Home Assistant
 
-#### Run as CLI
+1. Go to **Settings > Devices & Services**.
+2. Click **+ Add Integration**.
+3. Search for `MyDolphin Plus`.
+4. Enter the email address of your MyDolphin Plus account.
+5. Maytronics emails you a one-time login code. Enter it in Home Assistant.
 
-###### Requirements
+The integration then keeps itself logged in. You only need a new code if Maytronics ends the login, which can happen after about 30 days, or if you remove and re-add the integration. Home Assistant asks you to sign in again when that happens.
 
-- Python 3.10
-- Python virtual environment
-- Install all dependencies, using `pip install -r requirements.txt` command
+### Help
 
-###### Environment variables
+Common set-up mistakes:
 
-| Environment Variable | Type    | Default | Description                                                                                                               |
-| -------------------- | ------- | ------- | ------------------------------------------------------------------------------------------------------------------------- |
-| Username             | String  | -       | Email of your MyDolphin Plus account (used to trigger Cognito OTP)                                                        |
-| DEBUG                | Boolean | False   | Setting to True will present DEBUG log level message while testing the code, False will set the minimum log level to INFO |
+- Installing the integration in HACS and stopping there. You still need to add it in **Devices & Services**.
+- Not restarting Home Assistant after installing.
+- Using an email that the MyDolphin Plus app doesn't know. Check that you can sign in to the app with it first.
 
-> CLI use requires interactively entering an OTP from the email Maytronics sends — the legacy username/password login is no longer accepted.
+## Vacuum Entity
 
-## HA Components
+The robot's **vacuum** entity starts and pauses a clean. **Return to base** runs Pickup, which brings the robot to the pool wall so you can lift it out.
 
-| Entity Name                          | Type          | Description                                                                 | Additional information                                                                                                    |
-| ------------------------------------ | ------------- | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| {Robot Name} AWS Broker              | Binary Sensor | Indicates whether the component synchronized with cloud or not              |                                                                                                                           |
-| {Robot Name} Weekly Schedule         | Binary Sensor | Indicates whether the weekly scheduler is on or off                         |                                                                                                                           |
-| {Robot Name} LED                     | Light         | Turned on or off the led                                                    |                                                                                                                           |
-| {Robot Name} LED Intensity           | Number        | Sets the LED intensity values between 0-100                                 |                                                                                                                           |
-| {Robot Name} Cycle Time              | Number        | Shows and sets how long the current clean runs, 1 to 600 minutes            | Only accepted while the robot cleans                                                                                      |
-| {Robot Name} LED Mode                | Select        | Select led mode                                                             | Blinking, Always on, Disco                                                                                                |
-| {Robot Name} Status                  | Sensor        | Presents the calculated status of the device                                |                                                                                                                           |
-| {Robot Name} RSSI                    | Sensor        | Presents the WIFI signal strength in DB                                     |                                                                                                                           |
-| {Robot Name} Network Name            | Sensor        | Presents the name of the network (WIFI SSID)                                |                                                                                                                           |
-| {Robot Name} Clean Mode              | Sensor        | Presents the current clean mode                                             |                                                                                                                           |
-| {Robot Name} Power Supply Status     | Sensor        | Presents the status of the power supply                                     |                                                                                                                           |
-| {Robot Name} Robot Status            | Sensor        | Presents the status of the robot                                            |                                                                                                                           |
-| {Robot Name} Robot Model             | Sensor        | Presents the type of the robot                                              |                                                                                                                           |
-| {Robot Name} Cycle Count             | Sensor        | Presents the number of cycles ran                                           |                                                                                                                           |
-| {Robot Name} Filter Status           | Sensor        | Presents the status of the filter bag                                       |                                                                                                                           |
-| {Robot Name} Reset Filter Indicator  | Button        | Resets the filter bag indicator after the filter has been cleaned           | Sends `resetFbi` to the robot; the Filter Status sensor updates on the next report from the robot                         |
-| {Robot Name} Cycle Time Left         | Sensor        | Indicates the time left for the robot to complete the cycle                 | Measurement of duration in seconds                                                                                        |
-| {Robot Name} Remote                  | Remote        | Provides virtual joystick control for manual robot navigation               | Features: Activity (Stop, Forward, Backward, Left, Right), Turn On, Turn Off                                              |
-| {Robot Name}                         | Vacuum        | Provides functionality of vacuum to the robot                               | Features: State, Fan Speed (Cleaning Mode), Return Home (Pickup), Turn On, Turn Off, Send Command (Schedule, Delay Clean) |
+### Clean Modes
 
-### Cleaning Modes
+The vacuum's fan speed is the clean mode. The list holds the modes your robot supports, as the MyDolphin Plus app shows them, plus Pickup. The integration reads them from Maytronics at startup. If it can't, it lists every mode.
 
-| Key    | Name          | Description                                  | Duration (Hours) |
-| ------ | ------------- | -------------------------------------------- | ---------------- |
-| all    | Regular       | cleans floor, water and waterline            | 2                |
-| short  | Fast mode     | cleans the floor                             | 1                |
-| floor  | Floor only    | Cleans the floor only                        | 2                |
-| water  | Water line    | cleans the walls and water line              | 2                |
-| ultra  | Ultra clean   | deeply cleans the floor, walls and waterline | 2                |
-| stairs | Full coverage | cleans the floor, walls, waterline and steps | 2.5              |
+| Mode     | App name      |
+| -------- | ------------- |
+| `all`    | Regular       |
+| `short`  | Fast mode     |
+| `floor`  | Floor only    |
+| `water`  | Water line    |
+| `ultra`  | Ultra clean   |
+| `stairs` | Full coverage |
+| `pickup` | Pickup        |
 
-The vacuum offers the modes the robot supports, which the integration reads from Maytronics when it starts. If it can't, it offers every mode.
+## Number Entities
 
-### Led Modes
+### Cycle Time
 
-| Key | Name      |
-| --- | --------- |
-| 1   | Blinking  |
-| 2   | Always on |
-| 3   | Disco     |
+A **cycle time** `number` entity shows how long the current clean runs, in minutes (1 to 600). Set it while the robot cleans to make the clean longer or shorter. The robot ignores it while idle, so Home Assistant shows an error instead.
 
-## Services
+When you start a clean from Home Assistant, the robot runs for its usual time for that mode, as set in the app.
 
-### Remote Control
+### LED Intensity
 
-The Remote entity provides virtual joystick control for manual robot navigation. Use the Remote entity's activity feature to control the robot:
+An **LED intensity** `number` entity sets the brightness of the robot's LED, from 0 to 100%.
 
-**Available Activities:**
+## Sensor Entities
 
-- `stop` - Stop robot movement
-- `forward` - Move robot forward
-- `backward` - Move robot backward
-- `left` - Turn robot left
-- `right` - Turn robot right
+### Status
 
-**Usage:**
+A **status** `sensor` shows the overall state of the robot and power supply: Off, On, Checking Environment, Cleaning, Programming, Idle (Delay), Idle (Weekly) or Error. Its attributes hold the robot and power supply states it's based on.
 
-- Turn on the Remote entity to start manual control mode
-- Use the activity selector to choose movement direction
-- Turn off the Remote entity to exit manual control mode
+### Robot Status and Power Supply Status
 
-**Example:**
+A **robot status** `sensor` and a **power supply status** `sensor` show what each part reports on its own.
+
+### Clean Mode
+
+A **clean mode** `sensor` shows the mode of the current or last clean.
+
+### Cycle Time Left
+
+A **cycle time left** `sensor` shows how long the current clean has left. Home Assistant shows it in hours and minutes, and you can choose another unit in the entity settings.
+
+### Filter Status
+
+A **filter status** `sensor` shows how full the filter bag is: Empty, Partially full, Getting full, Almost full or Full. Use the **Reset Filter Indicator** button once you've cleaned it.
+
+### Cycle Count
+
+A **cycle count** `sensor` counts the cleans the robot has run.
+
+### Robot Error and Power Supply Error
+
+A **robot error** `sensor` and a **power supply error** `sensor` show the error from the current clean, or OK. See [Error Event](#error-event) for the codes.
+
+### Wi-Fi
+
+The power supply has an **RSSI** `sensor` for Wi-Fi signal strength, and a **network name** `sensor` for the network it's on.
+
+### Temperature
+
+M700 robots get a **temperature** `sensor` for the water temperature, in °C.
+
+## Binary Sensor Entities
+
+### AWS Broker
+
+An **AWS broker** `binary_sensor` turns on while Home Assistant is connected to the Maytronics cloud.
+
+### Power Supply Connection
+
+A **power supply connection** `binary_sensor` turns on while the power supply is online.
+
+## Button Entities
+
+### Reset Filter Indicator
+
+A **reset filter indicator** `button` clears the filter bag indicator after you clean the filter. The Filter Status sensor updates when the robot next reports.
+
+## Light and Select Entities
+
+### LED
+
+An **LED** `light` turns the robot's LED on and off, and an **LED mode** `select` chooses its pattern: Blinking, Always on or Disco.
+
+## Remote Entities
+
+### Manual Drive
+
+A **remote** entity drives the robot by hand. Turn it on to start manual mode, choose an activity to move, and turn it off to leave manual mode.
+
+Activities: `stop`, `forward`, `backward`, `left`, `right`.
 
 ```yaml
-# Start remote control with forward movement
+# Start manual mode and drive forward
 service: remote.turn_on
 target:
-  entity_id: remote.{Robot Name}_remote
+  entity_id: remote.{robot_name}
 data:
   activity: forward
 
-# Stop robot and exit remote control
+# Stop and leave manual mode
 service: remote.turn_off
 target:
-  entity_id: remote.{Robot Name}_remote
+  entity_id: remote.{robot_name}
 ```
 
-## Events
+## Error Event
 
-### mydolphin_plus_error
-
-Description: Notifies about robot or power supply error
+The integration fires a `mydolphin_plus_error` event when the robot or power supply reports an error.
 
 ```json
 {
   "name": "{Robot | Power Supply} Error",
   "Robot Name": "{Robot Name}",
   "state": 1,
-  "Description": "details",
-  "Instructions": "when relevant"
+  "Description": "{Robot | Power Supply} Error",
+  "instructions": "steps to clear the fault, when known"
 }
 ```
 
-#### Available errors
+| Code | Description                   | Code | Description               |
+| ---- | ----------------------------- | ---- | ------------------------- |
+| 0    | OK                            | 13   | Wall/floor sensor 2       |
+| 1    | DC in voltage                 | 14   | Robot stuck               |
+| 2    | Out of water                  | 15   | Power supply overheat     |
+| 3    | Impeller overload<sup>†</sup> | 16   | Power supply overload     |
+| 4    | Impeller 1 underload          | 17   | Impeller 1 driver failure |
+| 5    | Impeller overload<sup>†</sup> | 18   | Impeller 2 driver failure |
+| 6    | Impeller 2 underload          | 19   | Drive 1 driver failure    |
+| 7    | Drive overload<sup>†</sup>    | 20   | Drive 2 driver failure    |
+| 8    | Drive 1 underload             | 21   | Servo overload            |
+| 9    | Drive overload<sup>†</sup>    | 22   | Impeller 1 motor failure  |
+| 10   | Drive 2 underload             | 23   | Impeller 2 motor failure  |
+| 11   | Wall/floor sensor             | 24   | Drive 1 motor failure     |
+| 12   | DC in voltage 23V             | 25   | Drive 2 motor failure     |
+|      |                               | 255  | OK                        |
 
-| Error Code | Description                                  | Instructions                                                                                                                                                                                                                                                                                                                     |
-| ---------- | -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 0          | Ok                                           |                                                                                                                                                                                                                                                                                                                                  |
-| 1          | DC in voltage                                |                                                                                                                                                                                                                                                                                                                                  |
-| 2          | Out of water                                 |                                                                                                                                                                                                                                                                                                                                  |
-| 3          | Impeller overload problem has been detected. | Please follow these steps:<br />1. Unplug the power supply.<br />2. Clean the debris from the impeller opening.<br />3. Dismantle the impeller compartment if the debris is inaccessible.<br />4. Re-assemble the robot, plug in the power supply, and try to operate again.\n5. If the above doesn’t help, contact your dealer. |
-| 4          | Impeller 1 underload                         |                                                                                                                                                                                                                                                                                                                                  |
-| 5          | Impeller overload problem has been detected. | Please follow these steps:<br />1. Unplug the power supply.<br />2. Clean the debris from the impeller opening.<br />3. Dismantle the impeller compartment if the debris is inaccessible.<br />4. Re-assemble the robot, plug in the power supply, and try to operate again.\n5. If the above doesn’t help, contact your dealer. |
-| 6          | Impeller 2 underload                         |                                                                                                                                                                                                                                                                                                                                  |
-| 7          | Drive overload problem has been detected     | Please follow these steps:<br />1. Unplug the power supply.<br />2. Remove any object or blockage from the driving system.<br />3. Plug in the power supply and try to operate again.<br />4. If the above doesn’t help, please contact your dealer                                                                              |
-| 8          | Drive 1 underload                            |                                                                                                                                                                                                                                                                                                                                  |
-| 9          | Drive overload problem has been detected     | Please follow these steps:<br />1. Unplug the power supply.<br />2. Remove any object or blockage from the driving system.<br /> 3. Plug in the power supply and try to operate again.<br />4. If the above doesn’t help, please contact your dealer                                                                             |
-| 10         | Drive 2 underload                            |                                                                                                                                                                                                                                                                                                                                  |
-| 11         | Wall/floor sensor                            |                                                                                                                                                                                                                                                                                                                                  |
-| 12         | DC in voltage 23V                            |                                                                                                                                                                                                                                                                                                                                  |
-| 13         | Wall floor sensor 2                          |                                                                                                                                                                                                                                                                                                                                  |
-| 14         | Robot stuck                                  |                                                                                                                                                                                                                                                                                                                                  |
-| 15         | Power supply overheat                        |                                                                                                                                                                                                                                                                                                                                  |
-| 16         | Power supply overload                        |                                                                                                                                                                                                                                                                                                                                  |
-| 17         | Impeller 1 Driver failure                    |                                                                                                                                                                                                                                                                                                                                  |
-| 18         | Impeller 2 Driver failure                    |                                                                                                                                                                                                                                                                                                                                  |
-| 19         | Drive 1 Driver failure                       |                                                                                                                                                                                                                                                                                                                                  |
-| 20         | Drive 2 Driver failure                       |                                                                                                                                                                                                                                                                                                                                  |
-| 21         | Servo over load                              |                                                                                                                                                                                                                                                                                                                                  |
-| 22         | Impeller 1 Motor failure                     |                                                                                                                                                                                                                                                                                                                                  |
-| 23         | Impeller 2 Motor failure                     |                                                                                                                                                                                                                                                                                                                                  |
-| 24         | Drive 1 Motor failure"                       |                                                                                                                                                                                                                                                                                                                                  |
-| 25         | Drive 2 Motor failure"                       |                                                                                                                                                                                                                                                                                                                                  |
-| 255        | Ok                                           |                                                                                                                                                                                                                                                                                                                                  |
+<sup>†</sup> The event's `instructions` field gives steps to clear the fault.
+
+## Dashboard Card
+
+The built-in tile card works well with the vacuum:
+
+```yaml
+type: tile
+entity: vacuum.{robot_name}
+show_entity_picture: true
+features:
+  - type: vacuum-commands
+    commands:
+      - start_pause
+      - return_home
+```
+
+For a robot picture, copy the icons from [`www`](www) into your Home Assistant `config/www` folder.
 
 ## Troubleshooting
 
-Before opening an issue, please provide logs related to the issue,
-For debug log level, please add the following to your config.yaml
+### Logs and diagnostics
+
+Before opening an issue, turn on debug logs:
 
 ```yaml
 logger:
@@ -215,71 +245,27 @@ logger:
     custom_components.mydolphin_plus: debug
 ```
 
-Please attach also diagnostic details of the integration, available in:
-<br />Settings -> Devices & Services -> MyDolphin Plus -> 3 dots menu -> Download diagnostics
-<br />See this link for further information:
-<br />https://www.home-assistant.io/docs/configuration/troubleshooting/
+Then attach the logs and the integration's diagnostics: **Settings > Devices & Services > MyDolphin Plus > ⋮ > Download diagnostics**.
 
-### Refresh token expired
+### Login code problems
 
-If the integration logs `EXPIRED_TOKEN` and stops loading, the stored Cognito `RefreshToken` is no longer valid (it has expired or been invalidated server-side). Home Assistant should raise a reauthentication prompt for the existing entry so you can complete the OTP flow again.
+- **No email arrives**: check spam, then try again. After several tries Maytronics may hold back codes for a few minutes.
+- **"Invalid or expired login code"**: codes only last a short time. Start again to get a new one.
+- **"Failed to send login code"**: Maytronics doesn't know the email. Check that you can sign in to the MyDolphin Plus app with it.
 
-A temporary internet or DNS outage does not cause this: the integration keeps its tokens and reconnects on its own once the network is back.
+### Signed out
 
-If reauthentication does not appear or cannot be completed, remove and re-add the integration as a fallback.
+If Maytronics ends the login, Home Assistant asks you to sign in again with a new code. If it doesn't ask, or you can't finish, remove the integration and add it again.
 
-The token state lives in `.storage/mydolphin_plus.config.json`, keyed by the entry id:
+Short internet or DNS outages don't sign you out. The integration reconnects once the network is back.
 
-```json
-{
-  "version": 1,
-  "minor_version": 1,
-  "key": "mydolphin_plus.config.json",
-  "data": {
-    "b8fa11c50331d2647b8aa7e37935efeb": {
-      "id-token": "...",
-      "refresh-token": "...",
-      "id-token-expires-at": 1746799200.0,
-      "serial-number": "...",
-      "motor-unit-serial": "..."
-    }
-  }
-}
-```
+### Upgrading from 1.0.25b5 or older
 
-You generally do not need to edit this file by hand — re-running the config flow rewrites it.
-
-## Lovelace cards.
-
-We have confirmed the robot works with the custom vacuum card, built by denysdovhan
-https://github.com/denysdovhan/vacuum-card
-
-Copy the icons from www on the repository to /config/www. Below is a suggested configuration for the card
-
-```yaml
-type: tile
-entity: vacuum.robot_name
-show_entity_picture: true
-features:
-  - type: vacuum-commands
-    commands:
-      - start_pause
-      - stop
-      - return_home
-```
-
-### OTP login troubleshooting
-
-If you cannot complete the OTP flow:
-
-- **No email arrives** — check spam, then retry. If repeated retries fail, Cognito may be rate-limiting; wait a few minutes.
-- **"Invalid or expired login code"** — codes are short-lived. Restart the config flow to receive a fresh one.
-- **"Failed to send login code"** — usually means Cognito does not recognise the email. Confirm you can sign in to the official MyDolphin Plus app with the same address; if not, register the account in the app first.
-- **Repeated failures with a known-good email** — collect debug logs (see [Troubleshooting](#troubleshooting)) and open an issue.
+Maytronics retired the old email and password login. After you update, Home Assistant asks you to sign in again with a login code. You don't need to reinstall.
 
 ## Contributors
 
-Thanks to everyone who has contributed to this project:
+Thanks to everyone who has worked on this integration, upstream and here:
 
 - [Elad Bar](https://github.com/elad-bar)
 - Dan Wheaton
@@ -292,4 +278,4 @@ Thanks to everyone who has contributed to this project:
 - [grillp](https://github.com/grillp)
 - [lordlala](https://github.com/lordlala)
 
-See [Contributing](CONTRIBUTING.md) for contribution guidelines.
+See [Contributing](CONTRIBUTING.md) to help out. For every entity and attribute, see [docs/HA_ENTITIES.md](docs/HA_ENTITIES.md).
