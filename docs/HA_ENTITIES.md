@@ -19,6 +19,10 @@ The product name and supported clean modes load from the Maytronics API at start
 
 Power supply entities keep entity IDs based on the robot's name, such as `sensor.{robot_name}_rssi`.
 
+### When the robot is offline
+
+When the power supply loses its connection to the Maytronics cloud, every entity except AWS Broker and Power Supply Connection shows as unavailable, and commands fail with a "robot is offline" error. They come back once the power supply reconnects.
+
 ---
 
 ## 🤖 Vacuum Entity (1)
@@ -574,6 +578,8 @@ Whether Home Assistant is connected to the Maytronics cloud (AWS IoT), which car
 Whether the power supply is connected to the Maytronics cloud, from `isConnected.connected` in the robot's state. This differs from AWS Broker, which is Home Assistant's own connection.
 
 The power supply stays online when the robot is off between cleans, so this can be on while the robot reports as disconnected.
+
+While this is off, every entity except this one and AWS Broker is unavailable.
 
 ---
 

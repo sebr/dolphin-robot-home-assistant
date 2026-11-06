@@ -278,6 +278,9 @@
   "exceptions": {
     "cycle_time_needs_cleaning": {
       "message": "The robot only accepts a new cycle time while it is cleaning."
+    },
+    "robot_offline": {
+      "message": "The robot is offline. Check that the power supply is on and connected to Wi-Fi."
     }
   }
 }

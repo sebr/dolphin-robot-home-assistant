@@ -278,6 +278,9 @@
   "exceptions": {
     "cycle_time_needs_cleaning": {
       "message": "Le robot n'accepte une nouvelle durée de cycle que pendant le nettoyage."
+    },
+    "robot_offline": {
+      "message": "Le robot est hors ligne. Vérifiez que le bloc d'alimentation est allumé et connecté au Wi-Fi."
     }
   }
 }
