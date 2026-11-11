@@ -10,6 +10,7 @@ from custom_components.mydolphin_plus.common.connectivity_status import (
     ConnectivityStatus,
 )
 from custom_components.mydolphin_plus.common.consts import DOMAIN
+from custom_components.mydolphin_plus.managers.aws_client import AWSClient
 from custom_components.mydolphin_plus.managers.config_manager import ConfigManager
 from custom_components.mydolphin_plus.managers.rest_api import RestAPI
 
@@ -77,4 +78,33 @@ async def test_rest_api_logs_no_credentials(
 
     log = _integration_log(caplog)
     assert "API Data updated" in log
+    assert "secret" not in log
+
+
+async def test_aws_client_logs_no_credentials(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Starting the AWS IoT client logs no AWS credentials."""
+    caplog.set_level(logging.DEBUG)
+
+    class StopBeforeConnectingError(Exception):
+        """Ends initialize() before it connects."""
+
+    async def stop() -> None:
+        raise StopBeforeConnectingError
+
+    config_manager = type(
+        "ConfigManager", (), {"entry_id": "entry-id", "motor_unit_serial": "unit"}
+    )()
+    client = AWSClient(hass, config_manager, lambda: None)
+    client._api_data = dict(SECRETS)
+    monkeypatch.setattr(client, "_get_certificate", stop)
+    monkeypatch.setattr(client, "_set_status", lambda *_args: None)
+
+    await client.initialize()
+
+    log = _integration_log(caplog)
+    assert "AWS IAM Credentials" in log
     assert "secret" not in log
